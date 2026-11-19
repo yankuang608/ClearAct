@@ -1,0 +1,32 @@
+{
+  "name": "@clearact/element-plus",
+  "version": "0.0.1-beta",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "peerDependencies": {
+    "@clearact/core": "workspace:^",
+    "@clearact/dom": "workspace:^",
+    "@clearact/vue": "workspace:^",
+    "vue": ">=3.3",
+    "element-plus": "2.11.5"
+  },
+  "devDependencies": {
+    "@clearact/core": "workspace:^",
+    "@clearact/dom": "workspace:^",
+    "@clearact/vue": "workspace:^",
+    "element-plus": "2.11.5"
+  },
+  "license": "MIT"
+}

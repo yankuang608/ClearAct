@@ -1,0 +1,30 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import Ajv from 'ajv';
+import {WebSocketServer} from 'ws';
+import {createClearActRuntime} from '../src/index.ts';
+test('precompiled validation runs without dynamic schema compilation and rejects invalid input',async t=>{
+ t.mock.method(Ajv.prototype,'compile',()=>{throw new EvalError('CSP forbids dynamic compilation');});
+ let effects=0;let schema:any;
+ const validate:any=(v:any)=>typeof v?.title==='string'&&Object.keys(v).length===1;
+ const server=new WebSocketServer({port:0});
+ await new Promise<void>(resolve=>server.once('listening',resolve));
+ const runtime=createClearActRuntime({sessionId:'csp',serverUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}`,validatorFactory:action=>{schema=action.inputSchema;return validate;}});
+ t.after(()=>{runtime.dispose();for(const socket of server.clients)socket.terminate();server.close();});
+ runtime.registerAction({name:'draft',description:'Create draft',risk:'write',inputSchema:{type:'object',properties:{title:{type:'string'}},required:['title'],additionalProperties:false},async execute(v){effects++;return v;}});
+ assert.equal(schema.additionalProperties,false);
+ const connection=new Promise<import('ws').WebSocket>(resolve=>server.once('connection',resolve));
+ runtime.connect();const socket=await connection;
+ const next=()=>new Promise<any>(resolve=>socket.once('message',data=>resolve(JSON.parse(String(data)))));
+ await next();let response=next();
+ socket.send(JSON.stringify({type:'execute',operationId:'one',action:'draft',arguments:{title:'A'}}));
+ assert.deepEqual((await response).result,{title:'A'});
+ response=next();socket.send(JSON.stringify({type:'execute',operationId:'two',action:'draft',arguments:{title:2}}));
+ assert.match((await response).error,/Invalid arguments/);
+ assert.equal(effects,1);
+});
+test('an incomplete precompiled validator registry fails closed',()=>{
+ const runtime=createClearActRuntime({sessionId:'csp',serverUrl:'http://localhost:1',validatorFactory:()=>undefined as any});
+ assert.throws(()=>runtime.registerAction({name:'read',description:'Read',risk:'read',inputSchema:{type:'object'},async execute(){return {};}}),/validator/i);
+ assert.deepEqual(runtime.getActions(),[]);runtime.dispose();
+});

@@ -1,0 +1,27 @@
+{
+  "name": "@clearact/vue",
+  "version": "0.0.1-beta",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "peerDependencies": {
+    "vue": ">=3.3",
+    "@clearact/core": "workspace:^"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "devDependencies": {
+    "@clearact/core": "workspace:^",
+    "vue": "^3.5.0"
+  },
+  "license": "MIT"
+}

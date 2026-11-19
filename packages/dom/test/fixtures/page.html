@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Current orders</title><style>
+.hidden { display:none } .clipped { width:45px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis }
+#scroller {height:80px; overflow:auto} td, th {padding:3px} dialog[open] { position:fixed; z-index:20; inset:40px; }
+</style></head>
+<body>
+<header><h1>Current orders</h1></header>
+<main>
+<section id="filters" aria-label="Filters"><label for="status">Status</label><select id="status"><option value="pending" selected>Pending</option><option value="secret">Invisible candidate</option></select><p>Page 1 of 5</p></section>
+<div id="scroller"><table id="orders" aria-label="Orders"><thead><tr><th>Order</th><th>Amount</th><th>Status</th><th>Action</th><th hidden>Secret</th></tr></thead><tbody>
+<tr data-id="1048" aria-selected="true"><td>1048</td><td>¥ 2,400.00</td><td><span>Awaiting review</span></td><td><button>Edit</button></td><td hidden>RAW_PRIVATE_240000</td></tr>
+<tr data-id="1049"><td>1049</td><td>¥ 7.00</td><td>Paid</td><td><button disabled aria-describedby="why">Edit</button><span id="why" hidden>Waiting for permission</span></td><td hidden>RAW_PRIVATE_700</td></tr>
+</tbody></table></div>
+<details><summary>Show detail</summary><p>CLOSED_DETAIL_SECRET</p></details>
+<div hidden>HIDDEN_PANEL_SECRET</div><div class="hidden">DISPLAY_NONE_SECRET</div>
+<form id="draft" aria-label="Edit order"><label for="address">Address</label><input id="address" value="server-old" required><label for="password">Password</label><input id="password" type="password" value="TOP_SECRET_PASSWORD"><label><input id="check" type="checkbox" checked>Selected</label><textarea aria-label="Notes">Old note</textarea><button id="submit" type="submit">Save</button><p role="alert" id="validation" hidden>Address is required</p></form>
+<p class="clipped" id="clip">CLIPPED_HIDDEN_TAIL_SENTINEL</p><p class="clipped" id="accessible-clip" aria-label="Full accessible description">Long visible description</p>
+<dialog id="closed"><h2>CLOSED_DIALOG_SECRET</h2></dialog>
+<div id="toast" aria-label="Unrelated toast"><p>Saved yesterday</p></div>
+<canvas id="canvas">CANVAS_FALLBACK_SECRET</canvas><iframe title="External frame"></iframe><x-private-control>Unadapted control content</x-private-control>
+</main>
+<div data-clearact-observer>OBSERVER_TECHNICAL_SECRET</div>
+</body></html>

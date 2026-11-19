@@ -1,0 +1,49 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "types": [
+      "node"
+    ],
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "paths": {
+      "@clearact/core": [
+        "./packages/core/src/index.ts"
+      ],
+      "@clearact/dom": [
+        "./packages/dom/src/index.ts"
+      ],
+      "@clearact/react": [
+        "./packages/react/src/index.ts"
+      ],
+      "@clearact/vue": [
+        "./packages/vue/src/index.ts"
+      ],
+      "@clearact/element-plus": [
+        "./packages/element-plus/src/index.ts"
+      ],
+      "@clearact/observer": [
+        "./packages/observer/src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "packages/**/*.ts",
+    "packages/**/*.tsx",
+    "scripts/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "work"
+  ]
+}

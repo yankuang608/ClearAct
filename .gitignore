@@ -1,0 +1,33 @@
+node_modules/
+dist/
+work/
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.log
+*.tsbuildinfo
+
+# Generated local credentials, browser sessions, and private trace archives.
+auth.json
+storage-state*.json
+*-storage-state.json
+cookies*.json
+approval-token*
+*.private.pem
+*.p12
+*.pfx
+trace*.zip
+*-trace.zip
+
+# Generated release and test outputs (never ignore changelogs or .changeset).
+artifacts/
+coverage/
+playwright-report/
+test-results/
+*.tgz
+.DS_Store
+
+# Ephemeral packed release output
+release-artifacts/

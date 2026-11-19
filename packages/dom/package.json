@@ -1,0 +1,25 @@
+{
+  "name": "@clearact/dom",
+  "version": "0.0.1-beta",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "peerDependencies": {
+    "@clearact/core": "workspace:^"
+  },
+  "devDependencies": {
+    "@clearact/core": "workspace:^"
+  },
+  "license": "MIT"
+}

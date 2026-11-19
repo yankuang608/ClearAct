@@ -1,0 +1,30 @@
+name: Validate SDK and release metadata
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm changeset:status
+      - name: Offline release guard tests (no registry)
+        run: node --test scripts/release-policy.test.mjs scripts/release-publish.test.mjs
+      - run: pnpm exec playwright install --with-deps chrome
+      - run: pnpm test
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm check:packages
+        env:
+          CLEARACT_CONSUMER_OFFLINE: '0'

@@ -1,0 +1,105 @@
+# INACTIVE REFERENCE ONLY: review and create a new release plan/identity before installation.
+name: Approved beta release
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: clearact-npm-beta
+  cancel-in-progress: false
+jobs:
+  approval:
+    if: >-
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'changeset-release/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      sha: ${{ steps.verify.outputs.sha }}
+    steps:
+      - uses: actions/github-script@v7
+        id: verify
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const {owner, repo} = context.repo;
+            const branch = await github.rest.repos.getBranch({owner,repo,branch:'main'});
+            if(branch.data.commit.sha !== pr.merge_commit_sha) throw new Error('Stale merge; do not publish');
+            const files = await github.paginate(github.rest.pulls.listFiles,{owner,repo,pull_number:pr.number});
+            if(!files.some(f=>f.filename==='release-plan.json')) throw new Error('Release plan must change in version PR');
+            const reviews = await github.paginate(github.rest.pulls.listReviews,{owner,repo,pull_number:pr.number});
+            const latest = new Map();
+            for(const r of reviews) if(r.state !== 'COMMENTED') latest.set(r.user.login,r);
+            const approved = [...latest.values()].some(r=>r.state==='APPROVED' && r.commit_id===pr.head.sha && ['OWNER','MEMBER','COLLABORATOR'].includes(r.author_association));
+            if(!approved) throw new Error('Current version PR needs explicit collaborator approval');
+            core.setOutput('sha',pr.merge_commit_sha);
+  validate:
+    needs: approval
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.approval.outputs.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Validate metadata and types (no publishing identity)
+        run: pnpm changeset:status && pnpm typecheck && node --test scripts/release-policy.test.mjs scripts/release-publish.test.mjs
+      - name: Browser and unit tests (not a dry run)
+        run: pnpm exec playwright install --with-deps chrome && pnpm test
+      - name: Build, consumer check and pack (not a registry upload)
+        run: pnpm build && pnpm check:packages && node scripts/release-pack.mjs
+        env:
+          CLEARACT_CONSUMER_OFFLINE: '0'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: beta-${{ needs.approval.outputs.sha }}
+          path: release-artifacts/
+          if-no-files-found: error
+  publish:
+    needs: [approval, validate]
+    if: vars.CLEARACT_NPM_PUBLISH_ENABLED == 'true' && vars.CLEARACT_NPM_REGISTRY == 'https://registry.npmjs.org/'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.approval.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v4
+        with:
+          name: beta-${{ needs.approval.outputs.sha }}
+          path: release-artifacts/
+      - name: Check supported npm OIDC client
+        run: node -e "const [a,b,c]=require('child_process').execFileSync('npm',['--version'],{encoding:'utf8'}).trim().split('.').map(Number);if(a<11||(a===11&&(b<5||(b===5&&c<1))))process.exit(1)"
+      - name: Recheck main immediately before upload
+        uses: actions/github-script@v7
+        env:
+          EXPECTED_SHA: ${{ needs.approval.outputs.sha }}
+        with:
+          script: |
+            const branch = await github.rest.repos.getBranch({...context.repo,branch:'main'});
+            if(branch.data.commit.sha !== process.env.EXPECTED_SHA) throw new Error('Main moved during validation; release refused');
+      - name: Publish beta only (disabled until separately configured)
+        run: node scripts/release-publish.mjs
+        env:
+          NPM_READ_TOKEN: ${{ secrets.NPM_READ_TOKEN }}
+          CLEARACT_NPM_PUBLISH_ENABLED: ${{ vars.CLEARACT_NPM_PUBLISH_ENABLED }}
+          CLEARACT_NPM_REGISTRY: ${{ vars.CLEARACT_NPM_REGISTRY }}
+          CLEARACT_APPROVED_RELEASE_SHA: ${{ needs.approval.outputs.sha }}
+          GITHUB_SHA: ${{ needs.approval.outputs.sha }}
